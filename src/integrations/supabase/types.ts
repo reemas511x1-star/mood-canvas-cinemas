@@ -14,7 +14,132 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          is_public: boolean
+          language: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          is_public?: boolean
+          language?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          is_public?: boolean
+          language?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          language: string
+          mood: string
+          updated_at: string
+          user_id: string
+          weather_mood: string | null
+        }
+        Insert: {
+          language?: string
+          mood?: string
+          updated_at?: string
+          user_id: string
+          weather_mood?: string | null
+        }
+        Update: {
+          language?: string
+          mood?: string
+          updated_at?: string
+          user_id?: string
+          weather_mood?: string | null
+        }
+        Relationships: []
+      }
+      watch_items: {
+        Row: {
+          backdrop_path: string | null
+          created_at: string
+          current_episode: number | null
+          current_season: number | null
+          genres: string[] | null
+          id: string
+          media_type: string
+          notes: string | null
+          original_title: string | null
+          overview: string | null
+          poster_path: string | null
+          release_year: number | null
+          status: string
+          title: string
+          tmdb_id: number
+          tmdb_rating: number | null
+          updated_at: string
+          user_id: string
+          user_rating: number | null
+          will_rewatch: boolean
+        }
+        Insert: {
+          backdrop_path?: string | null
+          created_at?: string
+          current_episode?: number | null
+          current_season?: number | null
+          genres?: string[] | null
+          id?: string
+          media_type: string
+          notes?: string | null
+          original_title?: string | null
+          overview?: string | null
+          poster_path?: string | null
+          release_year?: number | null
+          status?: string
+          title: string
+          tmdb_id: number
+          tmdb_rating?: number | null
+          updated_at?: string
+          user_id: string
+          user_rating?: number | null
+          will_rewatch?: boolean
+        }
+        Update: {
+          backdrop_path?: string | null
+          created_at?: string
+          current_episode?: number | null
+          current_season?: number | null
+          genres?: string[] | null
+          id?: string
+          media_type?: string
+          notes?: string | null
+          original_title?: string | null
+          overview?: string | null
+          poster_path?: string | null
+          release_year?: number | null
+          status?: string
+          title?: string
+          tmdb_id?: number
+          tmdb_rating?: number | null
+          updated_at?: string
+          user_id?: string
+          user_rating?: number | null
+          will_rewatch?: boolean
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
