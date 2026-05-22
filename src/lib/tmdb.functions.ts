@@ -54,3 +54,45 @@ export const fetchTmdbDetails = createServerFn({ method: "GET" })
     if (!r.ok) throw new Error("TMDB details failed");
     return r.json();
   });
+
+export const fetchPerson = createServerFn({ method: "GET" })
+  .inputValidator((input: { person_id: number; language?: string }) =>
+    z.object({
+      person_id: z.number().int().positive(),
+      language: z.enum(["en", "ar"]).default("en"),
+    }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const lang = data.language === "ar" ? "ar-SA" : "en-US";
+    const url = `${TMDB_BASE}/person/${data.person_id}?api_key=${key()}&language=${lang}&append_to_response=combined_credits`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("TMDB person failed");
+    return r.json();
+  });
+
+export const tmdbTitleByQuery = createServerFn({ method: "GET" })
+  .inputValidator((input: { query: string; language?: string }) =>
+    z.object({
+      query: z.string().min(1).max(120),
+      language: z.enum(["en", "ar"]).default("en"),
+    }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const lang = data.language === "ar" ? "ar-SA" : "en-US";
+    const url = `${TMDB_BASE}/search/multi?api_key=${key()}&language=${lang}&query=${encodeURIComponent(data.query)}&include_adult=false&page=1`;
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const j = await r.json();
+    const top = (j.results ?? []).find((x: any) => x.media_type === "movie" || x.media_type === "tv");
+    if (!top) return null;
+    return {
+      tmdb_id: top.id,
+      media_type: top.media_type as "movie" | "tv",
+      title: top.title ?? top.name,
+      poster_path: top.poster_path ?? null,
+      backdrop_path: top.backdrop_path ?? null,
+      overview: top.overview ?? null,
+      release_year: parseInt(((top.release_date ?? top.first_air_date) ?? "").slice(0, 4), 10) || null,
+      tmdb_rating: top.vote_average ?? null,
+    };
+  });

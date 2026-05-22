@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Cloud, Globe, LogOut, Sparkles, User as UserIcon } from "lucide-react";
+import { BarChart3, Cloud, Globe, LogOut, Sparkles, User as UserIcon } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { t } from "@/lib/i18n";
 import {
@@ -26,6 +26,12 @@ export function Navbar({ onSignInClick }: { onSignInClick?: () => void }) {
         </Link>
 
         <div className="flex items-center gap-2">
+          {user && (
+            <Link to="/stats" className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-full glass hover:bg-primary/15 transition">
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{lang === "ar" ? "إحصاءات" : "Stats"}</span>
+            </Link>
+          )}
           {/* Mood */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

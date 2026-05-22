@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { Navbar } from "@/components/Navbar";
 import { WatchGrid } from "@/components/WatchGrid";
+import { MoodRecommendations } from "@/components/MoodRecommendations";
 import { t } from "@/lib/i18n";
 
 export const Route = createFileRoute("/dashboard")({
@@ -25,7 +26,10 @@ function Dashboard() {
         <h1 className="text-4xl font-bold tracking-tight mb-8">
           <span className="text-gradient-cinema">{t(lang, "dashboard")}</span>
         </h1>
-        <WatchGrid />
+        <div className="space-y-10">
+          <WatchGrid />
+          <MoodRecommendations />
+        </div>
       </main>
     </div>
   );

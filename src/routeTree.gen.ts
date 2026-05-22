@@ -9,9 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StatsRouteImport } from './routes/stats'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ActorIdRouteImport } from './routes/actor.$id'
+import { Route as TitleTypeIdRouteImport } from './routes/title.$type.$id'
 
+const StatsRoute = StatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -22,35 +36,94 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ActorIdRoute = ActorIdRouteImport.update({
+  id: '/actor/$id',
+  path: '/actor/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TitleTypeIdRoute = TitleTypeIdRouteImport.update({
+  id: '/title/$type/$id',
+  path: '/title/$type/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/stats': typeof StatsRoute
+  '/actor/$id': typeof ActorIdRoute
+  '/title/$type/$id': typeof TitleTypeIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/stats': typeof StatsRoute
+  '/actor/$id': typeof ActorIdRoute
+  '/title/$type/$id': typeof TitleTypeIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/stats': typeof StatsRoute
+  '/actor/$id': typeof ActorIdRoute
+  '/title/$type/$id': typeof TitleTypeIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/reset-password'
+    | '/stats'
+    | '/actor/$id'
+    | '/title/$type/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard'
-  id: '__root__' | '/' | '/dashboard'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/reset-password'
+    | '/stats'
+    | '/actor/$id'
+    | '/title/$type/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/reset-password'
+    | '/stats'
+    | '/actor/$id'
+    | '/title/$type/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  StatsRoute: typeof StatsRoute
+  ActorIdRoute: typeof ActorIdRoute
+  TitleTypeIdRoute: typeof TitleTypeIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/stats': {
+      id: '/stats'
+      path: '/stats'
+      fullPath: '/stats'
+      preLoaderRoute: typeof StatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -65,12 +138,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/actor/$id': {
+      id: '/actor/$id'
+      path: '/actor/$id'
+      fullPath: '/actor/$id'
+      preLoaderRoute: typeof ActorIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/title/$type/$id': {
+      id: '/title/$type/$id'
+      path: '/title/$type/$id'
+      fullPath: '/title/$type/$id'
+      preLoaderRoute: typeof TitleTypeIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  StatsRoute: StatsRoute,
+  ActorIdRoute: ActorIdRoute,
+  TitleTypeIdRoute: TitleTypeIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
