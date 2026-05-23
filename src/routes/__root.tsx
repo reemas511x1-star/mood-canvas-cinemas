@@ -78,11 +78,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Vibe Vault Cinema — Your cinematic universe" },
       { name: "description", content: "Track every movie, series and anime you love. Cinematic, personal, mood-driven." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Vibe Vault Cinema" },
-      { property: "og:description", content: "Your cinematic universe, curated." },
+      { property: "og:title", content: "Vibe Vault Cinema — Your cinematic universe" },
+      { property: "og:description", content: "Track every movie, series and anime you love. Cinematic, personal, mood-driven." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Vibe Vault Cinema — Your cinematic universe" },
+      { name: "twitter:description", content: "Track every movie, series and anime you love. Cinematic, personal, mood-driven." },
     ],
     links: [
       {
