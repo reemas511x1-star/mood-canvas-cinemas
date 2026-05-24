@@ -96,9 +96,17 @@ Suggest 6 widely-available titles (mix movies, series, anime). Avoid duplicates 
       temperature: 0.8,
     });
     const raw = j.choices?.[0]?.message?.content ?? "{}";
+    type Pick = { title: string; year: number | null; type: "movie" | "tv"; why: string };
     let parsed: { picks?: unknown };
     try { parsed = JSON.parse(raw); } catch { parsed = { picks: [] }; }
-    const picks = Array.isArray(parsed.picks) ? (parsed.picks as unknown[]).slice(0, 6) : [];
+    const picks: Pick[] = Array.isArray(parsed.picks)
+      ? (parsed.picks as any[]).slice(0, 6).map((p) => ({
+          title: String(p?.title ?? ""),
+          year: typeof p?.year === "number" ? p.year : null,
+          type: p?.type === "tv" ? "tv" : "movie",
+          why: String(p?.why ?? ""),
+        }))
+      : [];
     return { picks };
   });
 
