@@ -85,6 +85,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "Vibe Vault Cinema — Your cinematic universe" },
       { name: "twitter:description", content: "Track every movie, series and anime you love. Cinematic, personal, mood-driven." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4276ab32-84ba-450e-96f1-17ecb9973c08/id-preview-b5895fa6--0bfa2840-70ae-4c49-aa85-aed0adb248f2.lovable.app-1779662515688.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4276ab32-84ba-450e-96f1-17ecb9973c08/id-preview-b5895fa6--0bfa2840-70ae-4c49-aa85-aed0adb248f2.lovable.app-1779662515688.png" },
     ],
     links: [
       {
