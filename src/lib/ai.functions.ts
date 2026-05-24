@@ -2,14 +2,54 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const MOOD_PROMPT: Record<string, string> = {
-  "masculine-dark": "dark, intense, brooding, masculine energy",
-  "light": "uplifting, warm, optimistic, daylight",
-  "feminine-vibrant": "vibrant, romantic, expressive, feminine energy",
-  "feminine-soft": "soft, tender, intimate, dreamy",
-  "neutral": "balanced, contemplative, refined",
-  "dark": "cinematic noir, mysterious, atmospheric",
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODEL = "llama-3.3-70b-versatile";
+
+const MANUAL_MOOD_DESC: Record<string, string> = {
+  midnight: "deep midnight, calm, starry, contemplative",
+  ember: "warm fireside, intimate, glowing",
+  forest: "natural, grounded, mossy and green",
+  cosmic: "vast, dreamy, sci-fi cosmic wonder",
+  sand: "warm desert, slow, golden",
+  arctic: "crisp, clean, icy clarity",
+  sakura: "soft pink, tender, Japanese, gentle",
+  storm: "dramatic, dark, rainy and intense",
+  gold: "luxurious, classic, elegant",
+  void: "minimal, austere, pure black silence",
 };
+
+const AUTO_MOOD_DESC: Record<string, string> = {
+  happy: "joyful, bright, uplifting",
+  sad: "tender, melancholic, soft",
+  anxious: "soothing, minimal, calming",
+  angry: "intense, cathartic",
+  excited: "vibrant, kinetic, thrilling",
+  tired: "gentle, low-energy, comforting",
+  lost: "introspective, atmospheric, searching",
+  grateful: "warm, hopeful, heartfelt",
+  tense: "cool, composed, easing",
+  ok: "balanced, easy, comfortable",
+};
+
+const AUTO_MOOD_KEYS = [
+  "happy","sad","anxious","angry","excited","tired","lost","grateful","tense","ok",
+] as const;
+type AutoMoodKey = typeof AUTO_MOOD_KEYS[number];
+
+async function callGroq(body: Record<string, unknown>) {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error("GROQ_API_KEY missing");
+  const res = await fetch(GROQ_URL, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ model: GROQ_MODEL, ...body }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Groq ${res.status}: ${text.slice(0, 200)}`);
+  }
+  return res.json();
+}
 
 export const getMoodRecommendations = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -29,12 +69,13 @@ export const getMoodRecommendations = createServerFn({ method: "POST" })
       .limit(40);
 
     const watchedSummary = (items ?? [])
-      .filter(i => i.status === "watched")
+      .filter((i: any) => i.status === "watched")
       .slice(0, 25)
-      .map(i => `${i.title}${i.user_rating ? ` (★${i.user_rating})` : ""}`)
+      .map((i: any) => `${i.title}${i.user_rating ? ` (★${i.user_rating})` : ""}`)
       .join(", ") || "no history yet";
 
-    const moodText = MOOD_PROMPT[data.mood] ?? data.mood;
+    const moodText =
+      MANUAL_MOOD_DESC[data.mood] ?? AUTO_MOOD_DESC[data.mood] ?? data.mood;
     const weatherText = data.weather ? ` The weather mood is ${data.weather}.` : "";
     const langName = data.language === "ar" ? "Arabic" : "English";
 
@@ -42,37 +83,59 @@ export const getMoodRecommendations = createServerFn({ method: "POST" })
 {"picks":[{"title":string,"year":number|null,"type":"movie"|"tv","why":string}]}
 Return EXACTLY 6 picks. "why" is one short sentence in ${langName}. No prose, no markdown.`;
 
-    const user = `User mood: ${moodText}.${weatherText}
+    const userMsg = `User mood: ${moodText}.${weatherText}
 Recently watched: ${watchedSummary}.
 Suggest 6 widely-available titles (mix movies, series, anime). Avoid duplicates of recently watched.`;
 
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
-
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: sys },
-          { role: "user", content: user },
-        ],
-        response_format: { type: "json_object" },
-      }),
+    const j = await callGroq({
+      messages: [
+        { role: "system", content: sys },
+        { role: "user", content: userMsg },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.8,
     });
-
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`AI failed: ${res.status} ${text.slice(0, 200)}`);
-    }
-    const j = await res.json();
     const raw = j.choices?.[0]?.message?.content ?? "{}";
-    let parsed: any;
+    type Pick = { title: string; year: number | null; type: "movie" | "tv"; why: string };
+    let parsed: { picks?: unknown };
     try { parsed = JSON.parse(raw); } catch { parsed = { picks: [] }; }
-    const picks = Array.isArray(parsed.picks) ? parsed.picks.slice(0, 6) : [];
+    const picks: Pick[] = Array.isArray(parsed.picks)
+      ? (parsed.picks as any[]).slice(0, 6).map((p) => ({
+          title: String(p?.title ?? ""),
+          year: typeof p?.year === "number" ? p.year : null,
+          type: p?.type === "tv" ? "tv" : "movie",
+          why: String(p?.why ?? ""),
+        }))
+      : [];
     return { picks };
+  });
+
+export const detectMood = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { text: string; language?: "en" | "ar" }) =>
+    z.object({
+      text: z.string().min(1).max(2000),
+      language: z.enum(["en", "ar"]).default("en"),
+    }).parse(input),
+  )
+  .handler(async ({ data }): Promise<{ mood: AutoMoodKey }> => {
+    const sys = `You are an emotion classifier. Given a short user message (English or Arabic), classify it into EXACTLY ONE of these mood labels: ${AUTO_MOOD_KEYS.join(", ")}.
+Reply ONLY with JSON: {"mood":"<label>"}. No prose.`;
+    const j = await callGroq({
+      messages: [
+        { role: "system", content: sys },
+        { role: "user", content: data.text },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.2,
+    });
+    const raw = j.choices?.[0]?.message?.content ?? "{}";
+    let mood: AutoMoodKey = "ok";
+    try {
+      const parsed = JSON.parse(raw);
+      if (typeof parsed.mood === "string" && (AUTO_MOOD_KEYS as readonly string[]).includes(parsed.mood)) {
+        mood = parsed.mood as AutoMoodKey;
+      }
+    } catch { /* fallback ok */ }
+    return { mood };
   });
