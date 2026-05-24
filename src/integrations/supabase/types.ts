@@ -49,22 +49,28 @@ export type Database = {
       }
       user_preferences: {
         Row: {
+          auto_mood: string | null
           language: string
           mood: string
+          mood_mode: string
           updated_at: string
           user_id: string
           weather_mood: string | null
         }
         Insert: {
+          auto_mood?: string | null
           language?: string
           mood?: string
+          mood_mode?: string
           updated_at?: string
           user_id: string
           weather_mood?: string | null
         }
         Update: {
+          auto_mood?: string | null
           language?: string
           mood?: string
+          mood_mode?: string
           updated_at?: string
           user_id?: string
           weather_mood?: string | null
