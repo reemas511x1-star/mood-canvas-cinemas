@@ -18,8 +18,8 @@ function Index() {
   const [authOpen, setAuthOpen] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/dashboard" });
-  }, [user, loading, navigate]);
+    if (!loading) navigate({ to: "/wesh" });
+  }, [loading, navigate]);
 
   return (
     <div className="min-h-screen">

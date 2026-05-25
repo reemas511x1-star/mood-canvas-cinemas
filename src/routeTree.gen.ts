@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WeshRouteImport } from './routes/wesh'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -16,6 +17,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ActorIdRouteImport } from './routes/actor.$id'
 import { Route as TitleTypeIdRouteImport } from './routes/title.$type.$id'
 
+const WeshRoute = WeshRouteImport.update({
+  id: '/wesh',
+  path: '/wesh',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StatsRoute = StatsRouteImport.update({
   id: '/stats',
   path: '/stats',
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/reset-password': typeof ResetPasswordRoute
   '/stats': typeof StatsRoute
+  '/wesh': typeof WeshRoute
   '/actor/$id': typeof ActorIdRoute
   '/title/$type/$id': typeof TitleTypeIdRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/reset-password': typeof ResetPasswordRoute
   '/stats': typeof StatsRoute
+  '/wesh': typeof WeshRoute
   '/actor/$id': typeof ActorIdRoute
   '/title/$type/$id': typeof TitleTypeIdRoute
 }
@@ -69,6 +77,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/reset-password': typeof ResetPasswordRoute
   '/stats': typeof StatsRoute
+  '/wesh': typeof WeshRoute
   '/actor/$id': typeof ActorIdRoute
   '/title/$type/$id': typeof TitleTypeIdRoute
 }
@@ -79,6 +88,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/reset-password'
     | '/stats'
+    | '/wesh'
     | '/actor/$id'
     | '/title/$type/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -87,6 +97,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/reset-password'
     | '/stats'
+    | '/wesh'
     | '/actor/$id'
     | '/title/$type/$id'
   id:
@@ -95,6 +106,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/reset-password'
     | '/stats'
+    | '/wesh'
     | '/actor/$id'
     | '/title/$type/$id'
   fileRoutesById: FileRoutesById
@@ -104,12 +116,20 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   StatsRoute: typeof StatsRoute
+  WeshRoute: typeof WeshRoute
   ActorIdRoute: typeof ActorIdRoute
   TitleTypeIdRoute: typeof TitleTypeIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wesh': {
+      id: '/wesh'
+      path: '/wesh'
+      fullPath: '/wesh'
+      preLoaderRoute: typeof WeshRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/stats': {
       id: '/stats'
       path: '/stats'
@@ -160,9 +180,20 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   StatsRoute: StatsRoute,
+  WeshRoute: WeshRoute,
   ActorIdRoute: ActorIdRoute,
   TitleTypeIdRoute: TitleTypeIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
