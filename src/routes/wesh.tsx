@@ -7,6 +7,30 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/wesh")({ component: WeshPage });
 
+const MOOD_TAGS = [
+  { id: "happy", label: "سعيد", emoji: "😊" },
+  { id: "sad", label: "حزين", emoji: "😢" },
+  { id: "excited", label: "متحمس", emoji: "🎉" },
+  { id: "need_cry", label: "بحاجة للبكاء", emoji: "😭" },
+  { id: "exhausted", label: "مرهق", emoji: "😴" },
+  { id: "bored", label: "مملول", emoji: "😒" },
+  { id: "anxious", label: "قلقان", emoji: "😰" },
+  { id: "romantic", label: "رومانسي", emoji: "💕" },
+  { id: "adventurous", label: "مغامر", emoji: "🚀" },
+  { id: "scared", label: "مرعوب", emoji: "😱" },
+  { id: "curious", label: "فضولي", emoji: "🤔" },
+  { id: "angry", label: "ناقم", emoji: "😤" },
+  { id: "nostalgic", label: "حنين للماضي", emoji: "🕰️" },
+  { id: "need_motivation", label: "محتاج تحفيز", emoji: "💪" },
+  { id: "need_laugh", label: "محتاج ضحك", emoji: "😂" },
+];
+
+const TYPE_OPTIONS = [
+  { id: "movie", label: "فيلم", icon: "🎬" },
+  { id: "series", label: "مسلسل", icon: "📺" },
+  { id: "anime", label: "أنمي", icon: "🎌" },
+];
+
 const GENRE_COLORS: Record<string, string> = {
   دراما: "#e05c5c",
   كوميديا: "#f0a830",
@@ -18,11 +42,12 @@ const GENRE_COLORS: Record<string, string> = {
   وثائقي: "#8fd46f",
   مغامرة: "#f7c948",
   جريمة: "#c0c0c0",
+  أنمي: "#ff6b9d",
 };
 
 function getAccent(genre: string) {
   for (const [key, color] of Object.entries(GENRE_COLORS)) {
-    if (genre.includes(key)) return color;
+    if (genre?.includes(key)) return color;
   }
   return "#e8b86d";
 }
@@ -37,6 +62,30 @@ function getSessionId() {
   return id;
 }
 
+function getMoodAccent(moodTags: string[]) {
+  const colorMap: Record<string, string> = {
+    happy: "#f0a830",
+    sad: "#4a6fa5",
+    excited: "#ff5c3a",
+    need_cry: "#7a5c7a",
+    exhausted: "#6b7280",
+    bored: "#8b8b8b",
+    anxious: "#e8b86d",
+    romantic: "#ff6fa8",
+    adventurous: "#3ae8c0",
+    scared: "#b04dff",
+    curious: "#4db8ff",
+    angry: "#dc2626",
+    nostalgic: "#d97706",
+    need_motivation: "#22c55e",
+    need_laugh: "#fbbf24",
+  };
+  for (const tag of moodTags) {
+    if (colorMap[tag]) return colorMap[tag];
+  }
+  return "#e8b86d";
+}
+
 type HistoryItem = {
   id: string;
   mood_text: string;
@@ -46,6 +95,8 @@ type HistoryItem = {
 
 export default function WeshPage() {
   const [mood, setMood] = useState("");
+  const [selectedMoodTags, setSelectedMoodTags] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(["movie", "series"]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<WeshRecommendation | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -69,24 +120,41 @@ export default function WeshPage() {
     loadHistory();
   }, []);
 
+  const toggleMoodTag = (tagId: string) => {
+    setSelectedMoodTags(prev =>
+      prev.includes(tagId) ? prev.filter(t => t !== tagId) : [...prev, tagId]
+    );
+  };
+
+  const toggleType = (typeId: string) => {
+    setSelectedTypes(prev =>
+      prev.includes(typeId) ? prev.filter(t => t !== typeId) : [...prev, typeId]
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const text = mood.trim();
-    if (!text || loading) return;
+    if ((!text && selectedMoodTags.length === 0) || loading || selectedTypes.length === 0) return;
+
+    const moodLabels = selectedMoodTags.map(id => MOOD_TAGS.find(t => t.id === id)?.label).filter(Boolean);
+    const typeLabels = selectedTypes.map(id => TYPE_OPTIONS.find(t => t.id === id)?.label).filter(Boolean);
+    const fullMood = [text, moodLabels.join("، ")].filter(Boolean).join(" | ");
+    const typesContext = `المستخدم يريد: ${typeLabels.join(" أو ")}`;
 
     setLoading(true);
     setResult(null);
     setAnimating(false);
 
     try {
-      const { recommendation } = await recommend({ data: { mood: text } });
+      const { recommendation } = await recommend({ data: { mood: `${fullMood}\n${typesContext}` } });
       setResult(recommendation);
       setAnimating(true);
 
       const sessionId = getSessionId();
       await supabase.from("wesh_recommendations").insert({
         session_id: sessionId,
-        mood_text: text,
+        mood_text: fullMood,
         recommendation,
       });
       await loadHistory();
@@ -97,7 +165,8 @@ export default function WeshPage() {
     }
   };
 
-  const accent = result ? getAccent(result.genre) : "#e8b86d";
+  const moodAccent = getMoodAccent(selectedMoodTags);
+  const accent = result ? getAccent(result.genre) : moodAccent;
 
   return (
     <div
@@ -106,35 +175,37 @@ export default function WeshPage() {
       style={{ background: "linear-gradient(160deg, #0d0d14 0%, #100d18 50%, #0a0f17 100%)" }}
     >
       {/* Header */}
-      <header className="px-6 pt-8 pb-4 flex items-center justify-between max-w-2xl mx-auto w-full">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-bold" style={{ color: "#e8b86d", fontFamily: "'Cairo', sans-serif", letterSpacing: "-0.01em" }}>
-            وش أشوف الليلة؟
-          </h1>
-          <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.45)" }}>
-            اكتب مزاجك، وخلّنا نختار لك
-          </p>
+      <header className="px-4 sm:px-6 pt-6 sm:pt-8 pb-4 max-w-3xl mx-auto w-full">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-4xl font-bold" style={{ color: "#e8b86d", fontFamily: "'Cairo', sans-serif", letterSpacing: "-0.01em" }}>
+              وش أشوف الليلة؟
+            </h1>
+            <p className="text-xs sm:text-sm mt-1" style={{ color: "rgba(255,255,255,0.45)" }}>
+              اكتب مزاجك، وخلّنا نختار لك
+            </p>
+          </div>
+          <button
+            onClick={() => { setShowHistory(!showHistory); }}
+            style={{
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              color: "rgba(255,255,255,0.65)",
+              borderRadius: "12px",
+              padding: "6px 12px",
+              fontSize: "12px",
+              cursor: "pointer",
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
+          >
+            {showHistory ? "اخفِ السجل" : `السجل (${history.length})`}
+          </button>
         </div>
-        <button
-          onClick={() => { setShowHistory(!showHistory); }}
-          style={{
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            color: "rgba(255,255,255,0.65)",
-            borderRadius: "12px",
-            padding: "8px 14px",
-            fontSize: "13px",
-            cursor: "pointer",
-            transition: "all 0.2s",
-          }}
-          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
-          onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
-        >
-          {showHistory ? "اخفِ السجل" : `السجل (${history.length})`}
-        </button>
       </header>
 
-      <main className="flex-1 px-4 pb-12 max-w-2xl mx-auto w-full space-y-6">
+      <main className="flex-1 px-4 pb-12 max-w-3xl mx-auto w-full space-y-4 sm:space-y-6">
         {/* Input card */}
         <form onSubmit={handleSubmit}>
           <div
@@ -142,19 +213,112 @@ export default function WeshPage() {
               background: "rgba(255,255,255,0.04)",
               border: "1px solid rgba(255,255,255,0.1)",
               borderRadius: "20px",
-              padding: "20px",
+              padding: "16px sm:px-5 sm:py-6",
             }}
           >
+            {/* Mood tags */}
+            <div style={{ marginBottom: "16px" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "12px",
+                  color: "rgba(255,255,255,0.5)",
+                  marginBottom: "10px",
+                  fontFamily: "'Cairo', sans-serif",
+                }}
+              >
+                اختر مزاجك:
+              </label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {MOOD_TAGS.map(tag => (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => toggleMoodTag(tag.id)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "6px 12px",
+                      borderRadius: "999px",
+                      border: selectedMoodTags.includes(tag.id)
+                        ? `1px solid ${moodAccent}`
+                        : "1px solid rgba(255,255,255,0.15)",
+                      background: selectedMoodTags.includes(tag.id)
+                        ? `${moodAccent}25`
+                        : "rgba(255,255,255,0.04)",
+                      color: selectedMoodTags.includes(tag.id) ? "#fff" : "rgba(255,255,255,0.6)",
+                      fontSize: "12px",
+                      cursor: "pointer",
+                      fontFamily: "'Cairo', sans-serif",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    <span>{tag.emoji}</span>
+                    <span>{tag.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Type selection */}
+            <div style={{ marginBottom: "16px" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "12px",
+                  color: "rgba(255,255,255,0.5)",
+                  marginBottom: "10px",
+                  fontFamily: "'Cairo', sans-serif",
+                }}
+              >
+                ماذا تريد أن تشاهد؟
+              </label>
+              <div style={{ display: "flex", gap: "10px" }}>
+                {TYPE_OPTIONS.map(type => (
+                  <button
+                    key={type.id}
+                    type="button"
+                    onClick={() => toggleType(type.id)}
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                      padding: "12px",
+                      borderRadius: "14px",
+                      border: selectedTypes.includes(type.id)
+                        ? `1px solid ${moodAccent}`
+                        : "1px solid rgba(255,255,255,0.15)",
+                      background: selectedTypes.includes(type.id)
+                        ? `${moodAccent}20`
+                        : "rgba(255,255,255,0.04)",
+                      color: selectedTypes.includes(type.id) ? "#fff" : "rgba(255,255,255,0.5)",
+                      fontSize: "13px",
+                      cursor: "pointer",
+                      fontFamily: "'Cairo', sans-serif",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    <span style={{ fontSize: "18px" }}>{type.icon}</span>
+                    <span style={{ fontWeight: "600" }}>{type.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Free text input */}
             <label
               style={{
                 display: "block",
-                fontSize: "13px",
+                fontSize: "12px",
                 color: "rgba(255,255,255,0.5)",
                 marginBottom: "10px",
                 fontFamily: "'Cairo', sans-serif",
               }}
             >
-              كيف مزاجك الآن؟
+              أو اكتب مزاجك بتفصيل أكثر (اختياري):
             </label>
             <textarea
               ref={textareaRef}
@@ -167,7 +331,7 @@ export default function WeshPage() {
                 }
               }}
               placeholder="مثال: تعبان ومحتاج شيء يريّح، أو متحمس وأبي أكشن قوي…"
-              rows={3}
+              rows={2}
               disabled={loading}
               style={{
                 width: "100%",
@@ -175,12 +339,12 @@ export default function WeshPage() {
                 border: "1px solid rgba(255,255,255,0.1)",
                 borderRadius: "14px",
                 color: "rgba(255,255,255,0.9)",
-                fontSize: "15px",
-                padding: "14px 16px",
+                fontSize: "14px",
+                padding: "12px 14px",
                 resize: "none",
                 outline: "none",
                 fontFamily: "'Cairo', sans-serif",
-                lineHeight: "1.7",
+                lineHeight: "1.6",
                 transition: "border-color 0.2s",
                 boxSizing: "border-box",
               }}
@@ -188,23 +352,23 @@ export default function WeshPage() {
               onBlur={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)")}
             />
             <div className="flex items-center justify-between mt-3">
-              <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>
+              <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>
                 {mood.length}/500
               </span>
               <button
                 type="submit"
-                disabled={loading || !mood.trim()}
+                disabled={loading || selectedTypes.length === 0}
                 style={{
-                  background: loading || !mood.trim()
+                  background: loading || selectedTypes.length === 0
                     ? "rgba(232,184,109,0.3)"
                     : "linear-gradient(135deg, #e8b86d, #c8843a)",
-                  color: loading || !mood.trim() ? "rgba(255,255,255,0.4)" : "#1a0f00",
+                  color: loading || selectedTypes.length === 0 ? "rgba(255,255,255,0.4)" : "#1a0f00",
                   border: "none",
                   borderRadius: "12px",
                   padding: "10px 24px",
                   fontSize: "14px",
                   fontWeight: "700",
-                  cursor: loading || !mood.trim() ? "not-allowed" : "pointer",
+                  cursor: loading || selectedTypes.length === 0 ? "not-allowed" : "pointer",
                   fontFamily: "'Cairo', sans-serif",
                   transition: "all 0.2s",
                   display: "flex",
@@ -238,7 +402,7 @@ export default function WeshPage() {
           >
             <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
               <div style={{ width: "64px", height: "90px", borderRadius: "10px", background: "rgba(255,255,255,0.06)", flexShrink: 0 }} />
-              <div style={{ flex: 1, space: "12px" }}>
+              <div style={{ flex: 1 }}>
                 <div style={{ height: "24px", borderRadius: "8px", background: "rgba(255,255,255,0.06)", marginBottom: "12px", width: "60%" }} />
                 <div style={{ height: "14px", borderRadius: "6px", background: "rgba(255,255,255,0.04)", marginBottom: "8px" }} />
                 <div style={{ height: "14px", borderRadius: "6px", background: "rgba(255,255,255,0.04)", width: "80%" }} />
@@ -259,11 +423,9 @@ export default function WeshPage() {
               boxShadow: `0 0 60px ${accent}18`,
             }}
           >
-            {/* Top accent bar */}
             <div style={{ height: "3px", background: `linear-gradient(90deg, ${accent}cc, ${accent}22)` }} />
 
-            <div style={{ padding: "24px" }}>
-              {/* Emoji + type badge */}
+            <div style={{ padding: "20px sm:px-6" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
                 <span style={{ fontSize: "36px" }}>{result.emoji || "🎬"}</span>
                 <span
@@ -276,10 +438,9 @@ export default function WeshPage() {
                     color: accent,
                     border: `1px solid ${accent}44`,
                     fontFamily: "'Cairo', sans-serif",
-                    letterSpacing: "0.05em",
                   }}
                 >
-                  {result.type === "movie" ? "فيلم" : "مسلسل"}
+                  {result.type === "movie" ? "فيلم" : result.type === "anime" ? "أنمي" : "مسلسل"}
                 </span>
                 {result.genre && (
                   <span
@@ -298,17 +459,7 @@ export default function WeshPage() {
                 )}
               </div>
 
-              {/* Title */}
-              <h2
-                style={{
-                  fontSize: "26px",
-                  fontWeight: "800",
-                  color: "#fff",
-                  margin: "0 0 4px",
-                  fontFamily: "'Cairo', sans-serif",
-                  lineHeight: "1.2",
-                }}
-              >
+              <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#fff", margin: "0 0 4px", fontFamily: "'Cairo', sans-serif" }}>
                 {result.titleAr}
               </h2>
               {result.title !== result.titleAr && (
@@ -316,13 +467,7 @@ export default function WeshPage() {
                   {result.title}{result.year ? ` · ${result.year}` : ""}
                 </p>
               )}
-              {result.year && result.title === result.titleAr && (
-                <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", margin: "0 0 16px" }}>
-                  {result.year}
-                </p>
-              )}
 
-              {/* Why */}
               <p
                 style={{
                   fontSize: "15px",
@@ -339,7 +484,6 @@ export default function WeshPage() {
                 {result.why}
               </p>
 
-              {/* Rating + actions */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 {result.rating && result.rating !== "N/A" && (
                   <span style={{ fontSize: "14px", color: accent, fontWeight: "700", fontFamily: "'Cairo', sans-serif" }}>
@@ -350,6 +494,7 @@ export default function WeshPage() {
                   onClick={() => {
                     setResult(null);
                     setMood("");
+                    setSelectedMoodTags([]);
                     textareaRef.current?.focus();
                   }}
                   style={{
@@ -364,8 +509,6 @@ export default function WeshPage() {
                     fontFamily: "'Cairo', sans-serif",
                     transition: "all 0.2s",
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
-                  onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
                 >
                   اسألني مجدداً
                 </button>
@@ -376,14 +519,7 @@ export default function WeshPage() {
 
         {/* History */}
         {showHistory && history.length > 0 && (
-          <div
-            style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: "20px",
-              overflow: "hidden",
-            }}
-          >
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "20px", overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
               <h3 style={{ margin: 0, fontSize: "14px", color: "rgba(255,255,255,0.5)", fontFamily: "'Cairo', sans-serif" }}>
                 توصياتك السابقة
@@ -423,7 +559,7 @@ export default function WeshPage() {
                       </div>
                     </div>
                     <span style={{ fontSize: "11px", padding: "3px 8px", borderRadius: "999px", background: `${a}22`, color: a, flexShrink: 0 }}>
-                      {rec.type === "movie" ? "فيلم" : "مسلسل"}
+                      {rec.type === "movie" ? "فيلم" : rec.type === "anime" ? "أنمي" : "مسلسل"}
                     </span>
                   </button>
                 );
@@ -439,21 +575,11 @@ export default function WeshPage() {
         )}
       </main>
 
-      {/* Font import + animations */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;700;800&display=swap');
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(24px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         textarea::placeholder { color: rgba(255,255,255,0.25); }
         textarea { caret-color: #e8b86d; }
         ::-webkit-scrollbar { width: 6px; }

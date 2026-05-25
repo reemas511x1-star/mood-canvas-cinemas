@@ -11,9 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as YawmiyatRouteImport } from './routes/yawmiyat'
 import { Route as WeshRouteImport } from './routes/wesh'
+import { Route as TravelRouteImport } from './routes/travel'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as QuotesRouteImport } from './routes/quotes'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as CharacterRouteImport } from './routes/character'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ActorIdRouteImport } from './routes/actor.$id'
 import { Route as TitleTypeIdRouteImport } from './routes/title.$type.$id'
@@ -28,6 +31,11 @@ const WeshRoute = WeshRouteImport.update({
   path: '/wesh',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TravelRoute = TravelRouteImport.update({
+  id: '/travel',
+  path: '/travel',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StatsRoute = StatsRouteImport.update({
   id: '/stats',
   path: '/stats',
@@ -38,9 +46,19 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuotesRoute = QuotesRouteImport.update({
+  id: '/quotes',
+  path: '/quotes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CharacterRoute = CharacterRouteImport.update({
+  id: '/character',
+  path: '/character',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -61,9 +79,12 @@ const TitleTypeIdRoute = TitleTypeIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/character': typeof CharacterRoute
   '/dashboard': typeof DashboardRoute
+  '/quotes': typeof QuotesRoute
   '/reset-password': typeof ResetPasswordRoute
   '/stats': typeof StatsRoute
+  '/travel': typeof TravelRoute
   '/wesh': typeof WeshRoute
   '/yawmiyat': typeof YawmiyatRoute
   '/actor/$id': typeof ActorIdRoute
@@ -71,9 +92,12 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/character': typeof CharacterRoute
   '/dashboard': typeof DashboardRoute
+  '/quotes': typeof QuotesRoute
   '/reset-password': typeof ResetPasswordRoute
   '/stats': typeof StatsRoute
+  '/travel': typeof TravelRoute
   '/wesh': typeof WeshRoute
   '/yawmiyat': typeof YawmiyatRoute
   '/actor/$id': typeof ActorIdRoute
@@ -82,9 +106,12 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/character': typeof CharacterRoute
   '/dashboard': typeof DashboardRoute
+  '/quotes': typeof QuotesRoute
   '/reset-password': typeof ResetPasswordRoute
   '/stats': typeof StatsRoute
+  '/travel': typeof TravelRoute
   '/wesh': typeof WeshRoute
   '/yawmiyat': typeof YawmiyatRoute
   '/actor/$id': typeof ActorIdRoute
@@ -94,9 +121,12 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/character'
     | '/dashboard'
+    | '/quotes'
     | '/reset-password'
     | '/stats'
+    | '/travel'
     | '/wesh'
     | '/yawmiyat'
     | '/actor/$id'
@@ -104,9 +134,12 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/character'
     | '/dashboard'
+    | '/quotes'
     | '/reset-password'
     | '/stats'
+    | '/travel'
     | '/wesh'
     | '/yawmiyat'
     | '/actor/$id'
@@ -114,9 +147,12 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/character'
     | '/dashboard'
+    | '/quotes'
     | '/reset-password'
     | '/stats'
+    | '/travel'
     | '/wesh'
     | '/yawmiyat'
     | '/actor/$id'
@@ -125,9 +161,12 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CharacterRoute: typeof CharacterRoute
   DashboardRoute: typeof DashboardRoute
+  QuotesRoute: typeof QuotesRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   StatsRoute: typeof StatsRoute
+  TravelRoute: typeof TravelRoute
   WeshRoute: typeof WeshRoute
   YawmiyatRoute: typeof YawmiyatRoute
   ActorIdRoute: typeof ActorIdRoute
@@ -150,6 +189,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WeshRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/travel': {
+      id: '/travel'
+      path: '/travel'
+      fullPath: '/travel'
+      preLoaderRoute: typeof TravelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/stats': {
       id: '/stats'
       path: '/stats'
@@ -164,11 +210,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/quotes': {
+      id: '/quotes'
+      path: '/quotes'
+      fullPath: '/quotes'
+      preLoaderRoute: typeof QuotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/character': {
+      id: '/character'
+      path: '/character'
+      fullPath: '/character'
+      preLoaderRoute: typeof CharacterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -197,9 +257,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CharacterRoute: CharacterRoute,
   DashboardRoute: DashboardRoute,
+  QuotesRoute: QuotesRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   StatsRoute: StatsRoute,
+  TravelRoute: TravelRoute,
   WeshRoute: WeshRoute,
   YawmiyatRoute: YawmiyatRoute,
   ActorIdRoute: ActorIdRoute,
