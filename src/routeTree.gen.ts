@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as YawmiyatRouteImport } from './routes/yawmiyat'
 import { Route as WeshRouteImport } from './routes/wesh'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -17,6 +18,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ActorIdRouteImport } from './routes/actor.$id'
 import { Route as TitleTypeIdRouteImport } from './routes/title.$type.$id'
 
+const YawmiyatRoute = YawmiyatRouteImport.update({
+  id: '/yawmiyat',
+  path: '/yawmiyat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WeshRoute = WeshRouteImport.update({
   id: '/wesh',
   path: '/wesh',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/stats': typeof StatsRoute
   '/wesh': typeof WeshRoute
+  '/yawmiyat': typeof YawmiyatRoute
   '/actor/$id': typeof ActorIdRoute
   '/title/$type/$id': typeof TitleTypeIdRoute
 }
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/stats': typeof StatsRoute
   '/wesh': typeof WeshRoute
+  '/yawmiyat': typeof YawmiyatRoute
   '/actor/$id': typeof ActorIdRoute
   '/title/$type/$id': typeof TitleTypeIdRoute
 }
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/stats': typeof StatsRoute
   '/wesh': typeof WeshRoute
+  '/yawmiyat': typeof YawmiyatRoute
   '/actor/$id': typeof ActorIdRoute
   '/title/$type/$id': typeof TitleTypeIdRoute
 }
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/stats'
     | '/wesh'
+    | '/yawmiyat'
     | '/actor/$id'
     | '/title/$type/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/stats'
     | '/wesh'
+    | '/yawmiyat'
     | '/actor/$id'
     | '/title/$type/$id'
   id:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/stats'
     | '/wesh'
+    | '/yawmiyat'
     | '/actor/$id'
     | '/title/$type/$id'
   fileRoutesById: FileRoutesById
@@ -117,12 +129,20 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   StatsRoute: typeof StatsRoute
   WeshRoute: typeof WeshRoute
+  YawmiyatRoute: typeof YawmiyatRoute
   ActorIdRoute: typeof ActorIdRoute
   TitleTypeIdRoute: typeof TitleTypeIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/yawmiyat': {
+      id: '/yawmiyat'
+      path: '/yawmiyat'
+      fullPath: '/yawmiyat'
+      preLoaderRoute: typeof YawmiyatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wesh': {
       id: '/wesh'
       path: '/wesh'
@@ -181,6 +201,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   StatsRoute: StatsRoute,
   WeshRoute: WeshRoute,
+  YawmiyatRoute: YawmiyatRoute,
   ActorIdRoute: ActorIdRoute,
   TitleTypeIdRoute: TitleTypeIdRoute,
 }
